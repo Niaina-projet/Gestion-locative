@@ -18,3 +18,7 @@ frontend/.angular/
 .vscode/
 *.swp
 *.swo
+
+# Node (racine monorepo)
+node_modules/
+package-lock.json

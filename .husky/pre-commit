@@ -1,0 +1,33 @@
+#!/bin/sh
+
+echo "🔍 PHP CS Fixer..."
+cd backend && vendor/bin/php-cs-fixer fix --dry-run --diff
+if [ $? -ne 0 ]; then
+  echo "❌ PHP CS Fixer a détecté des erreurs. Lance 'vendor/bin/php-cs-fixer fix' pour corriger."
+  exit 1
+fi
+
+echo "🔍 PHPStan..."
+vendor/bin/phpstan analyse
+if [ $? -ne 0 ]; then
+  echo "❌ PHPStan a détecté des erreurs. Corrige-les avant de commiter."
+  exit 1
+fi
+
+cd ../frontend
+
+echo "🔍 ESLint..."
+ng lint
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint a détecté des erreurs. Corrige-les avant de commiter."
+  exit 1
+fi
+
+echo "🔍 Prettier..."
+npx prettier --check src/
+if [ $? -ne 0 ]; then
+  echo "❌ Prettier a détecté des erreurs. Lance 'npx prettier --write src/' pour corriger."
+  exit 1
+fi
+
+echo "✅ Tous les checks sont OK !"
