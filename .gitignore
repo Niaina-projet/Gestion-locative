@@ -1,0 +1,20 @@
+# Symfony
+backend/.env.local
+backend/.env.*.local
+backend/vendor/
+backend/var/
+backend/public/uploads/
+
+# Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Docker
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
