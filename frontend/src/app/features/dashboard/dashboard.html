@@ -1,0 +1,10 @@
+<div style="padding: 24px">
+  <h1>Tableau de bord</h1>
+  <p>
+    Bienvenue {{ authService.currentUser()?.firstName }}
+    {{ authService.currentUser()?.lastName }}
+  </p>
+  <button mat-raised-button color="warn" (click)="authService.logout()">
+    Se déconnecter
+  </button>
+</div>
