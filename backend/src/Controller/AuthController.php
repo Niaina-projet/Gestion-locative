@@ -6,6 +6,7 @@ use App\DTO\Auth\UpdateProfileDTO;
 use App\Entity\User;
 use App\Security\Voter\UserVoter;
 use App\Service\AuthService;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -47,5 +48,19 @@ class AuthController extends AbstractController
             'message' => 'Profile updated successfully',
             'user' => $this->authService->formatUser($updatedUser),
         ]);
+    }
+
+    #[Route('/refresh-token', name: 'api_auth_refresh_token', methods: ['GET'])]
+    public function refreshToken(
+        JWTTokenManagerInterface $jwtManager,
+        #[CurrentUser] ?User $user,
+    ): JsonResponse {
+        if (! $user) {
+            return $this->json(['message' => 'Not authenticated'], 401);
+        }
+
+        $token = $jwtManager->create($user);
+
+        return $this->json(['token' => $token]);
     }
 }

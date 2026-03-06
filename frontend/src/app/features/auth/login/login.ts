@@ -56,9 +56,14 @@ export class Login {
       next: () => {
         this.router.navigate(['/dashboard']);
       },
-      error: () => {
+      error: (error) => {
         this.isLoading.set(false);
-        this.errorMessage.set('Email ou mot de passe incorrect');
+        if (error.status === 401) {
+          const message = error.error?.message;
+          this.errorMessage.set(message ?? 'Email ou mot de passe incorrect');
+        } else {
+          this.errorMessage.set('Une erreur est survenue, réessayez plus tard');
+        }
       },
     });
   }

@@ -1,9 +1,17 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, switchMap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LoginResponse, User } from '../../models/user.model';
+import { LoginResponse } from '../../models/user.model';
+
+export interface CurrentUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  roles: string[];
+}
 
 @Injectable({
   providedIn: 'root',
@@ -15,35 +23,14 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  private currentUserSignal = signal<User | null>(null);
-
-  currentUser = this.currentUserSignal.asReadonly();
-  isLoggedIn = computed(() => this.currentUserSignal() !== null);
-  isAdmin = computed(
-    () => this.currentUserSignal()?.roles.includes('ROLE_ADMIN') ?? false,
-  );
-
-  constructor() {
-    this.loadUserFromToken();
-  }
-
-  login(email: string, password: string): Observable<User> {
+  login(email: string, password: string): Observable<LoginResponse> {
     return this.http
       .post<LoginResponse>(`${this.apiUrl}/auth/login`, { email, password })
-      .pipe(
-        tap((response) => {
-          this.setToken(response.token);
-        }),
-        switchMap(() => this.http.get<User>(`${this.apiUrl}/auth/me`)),
-        tap((user) => {
-          this.currentUserSignal.set(user);
-        }),
-      );
+      .pipe(tap((response) => this.saveToken(response.token)));
   }
 
   logout(): void {
     localStorage.removeItem(this.TOKEN_KEY);
-    this.currentUserSignal.set(null);
     this.router.navigate(['/login']);
   }
 
@@ -51,18 +38,47 @@ export class AuthService {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
-  private setToken(token: string): void {
+  isLoggedIn(): boolean {
+    return !!this.getToken();
+  }
+
+  isAdmin(): boolean {
+    return this.getCurrentUser()?.roles.includes('ROLE_ADMIN') ?? false;
+  }
+
+  getCurrentUser(): CurrentUser | null {
+    const payload = this.getPayload();
+    if (!payload) {
+      return null;
+    }
+    return {
+      id: (payload['id'] as string) ?? '',
+      email: (payload['username'] as string) ?? '',
+      firstName: (payload['firstName'] as string) ?? '',
+      lastName: (payload['lastName'] as string) ?? '',
+      roles: (payload['roles'] as string[]) ?? [],
+    };
+  }
+
+  private getPayload(): Record<string, unknown> | null {
+    const token = this.getToken();
+    if (!token) {
+      return null;
+    }
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch {
+      return null;
+    }
+  }
+
+  private saveToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
   }
 
-  private loadUserFromToken(): void {
-    const token = this.getToken();
-    if (!token) {
-      return;
-    }
-    this.http.get<User>(`${this.apiUrl}/auth/me`).subscribe({
-      next: (user) => this.currentUserSignal.set(user),
-      error: () => this.logout(),
-    });
+  refreshToken(): Observable<LoginResponse> {
+    return this.http
+      .get<LoginResponse>(`${this.apiUrl}/auth/refresh-token`)
+      .pipe(tap((response) => this.saveToken(response.token)));
   }
 }
