@@ -1,0 +1,116 @@
+<div class="property-detail">
+  <div class="page-header">
+    <button mat-stroked-button (click)="navigateBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Retour
+    </button>
+    @if (property()) {
+      <button mat-raised-button color="accent" (click)="navigateToEdit()">
+        <mat-icon>edit</mat-icon>
+        Modifier
+      </button>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="48" />
+    </div>
+  } @else if (property()) {
+    <div class="detail-content">
+      <mat-card class="main-card">
+        <mat-card-header>
+          <mat-card-title>{{ property()!.title }}</mat-card-title>
+          <mat-card-subtitle>
+            {{ getTypeLabel(property()!.type) }} — {{ property()!.address }},
+            {{ property()!.city }}
+          </mat-card-subtitle>
+          <div class="status-container">
+            <app-status-badge [status]="property()!.status" />
+          </div>
+        </mat-card-header>
+
+        @if (property()!.photos.length > 0) {
+          <div class="photos-grid">
+            @for (photo of property()!.photos; track photo) {
+              <img [src]="photo" [alt]="property()!.title" />
+            }
+          </div>
+        }
+
+        <mat-card-content>
+          <div class="info-grid">
+            <div class="info-item">
+              <mat-icon>payments</mat-icon>
+              <div>
+                <span class="info-label">Loyer mensuel</span>
+                <span class="info-value rent">{{
+                  formatRent(property()!.rentAmount)
+                }}</span>
+              </div>
+            </div>
+
+            @if (property()!.deposit) {
+              <div class="info-item">
+                <mat-icon>account_balance</mat-icon>
+                <div>
+                  <span class="info-label">Caution</span>
+                  <span class="info-value">{{
+                    formatRent(property()!.deposit!)
+                  }}</span>
+                </div>
+              </div>
+            }
+
+            @if (property()!.surface) {
+              <div class="info-item">
+                <mat-icon>square_foot</mat-icon>
+                <div>
+                  <span class="info-label">Surface</span>
+                  <span class="info-value">{{ property()!.surface }} m²</span>
+                </div>
+              </div>
+            }
+
+            @if (property()!.rooms) {
+              <div class="info-item">
+                <mat-icon>meeting_room</mat-icon>
+                <div>
+                  <span class="info-label">Pièces</span>
+                  <span class="info-value">{{ property()!.rooms }}</span>
+                </div>
+              </div>
+            }
+
+            <div class="info-item">
+              <mat-icon>person</mat-icon>
+              <div>
+                <span class="info-label">Gestionnaire</span>
+                <span class="info-value">
+                  {{ property()!.owner.firstName }}
+                  {{ property()!.owner.lastName }}
+                </span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>calendar_today</mat-icon>
+              <div>
+                <span class="info-label">Ajouté le</span>
+                <span class="info-value">{{ property()!.createdAt }}</span>
+              </div>
+            </div>
+          </div>
+
+          @if (property()!.description) {
+            <mat-divider />
+            <div class="description">
+              <h3>Description</h3>
+              <p>{{ property()!.description }}</p>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</div>

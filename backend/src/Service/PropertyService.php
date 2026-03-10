@@ -24,7 +24,7 @@ class PropertyService
     public function findAllForUser(User $user): array
     {
         if (in_array('ROLE_ADMIN', $user->getRoles())) {
-            return $this->propertyRepository->findAll();
+            return $this->propertyRepository->findAllOrderedByDate();
         }
 
         return $this->propertyRepository->findByOwner($user);
@@ -104,6 +104,7 @@ class PropertyService
             $property->setDescription($dto->description);
         }
 
+        $property->setUpdatedAt(new \DateTimeImmutable());
         $this->em->flush();
 
         return $property;

@@ -22,7 +22,7 @@ class AppFixtures extends Fixture
         $admin->setEmail('admin@gestion-locative.mg');
         $admin->setPassword($this->hasher->hashPassword($admin, 'Admin@1234'));
         $admin->setFirstName('Admin');
-        $admin->setLastName('Système');
+        $admin->setLastName('Systeme');
         $admin->setRoles(['ROLE_ADMIN']);
         $admin->setIsActive(true);
         $manager->persist($admin);

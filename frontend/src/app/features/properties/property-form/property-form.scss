@@ -1,0 +1,72 @@
+.property-form {
+  max-width: 800px;
+  margin: 0 auto;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #212121;
+      margin: 0;
+    }
+  }
+
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+  }
+
+  mat-card {
+    margin-bottom: 24px;
+    padding: 8px;
+
+    mat-card-header {
+      margin-bottom: 16px;
+
+      mat-card-title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .full-width {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 8px;
+
+    .half-width {
+      flex: 1;
+    }
+  }
+
+  .photos-card {
+    mat-card-content {
+      padding-top: 8px;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+
+    button {
+      min-width: 150px;
+      height: 44px;
+    }
+  }
+}

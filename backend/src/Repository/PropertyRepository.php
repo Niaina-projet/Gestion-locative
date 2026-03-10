@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Property;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -20,13 +21,34 @@ class PropertyRepository extends ServiceEntityRepository
     /**
      * @return Property[]
      */
+    public function findAllOrderedByDate(): array
+    {
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addRootEntityFromClassMetadata(Property::class, 'p');
+
+        return $this->getEntityManager()
+            ->createNativeQuery(
+                'SELECT * FROM property ORDER BY updated_at DESC NULLS LAST, created_at DESC',
+                $rsm
+            )
+            ->getResult()
+        ;
+    }
+
+    /**
+     * @return Property[]
+     */
     public function findByOwner(User $owner): array
     {
-        return $this->createQueryBuilder('p')
-            ->where('p.owner = :owner')
-            ->setParameter('owner', $owner)
-            ->orderBy('p.createdAt', 'DESC')
-            ->getQuery()
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addRootEntityFromClassMetadata(Property::class, 'p');
+
+        return $this->getEntityManager()
+            ->createNativeQuery(
+                'SELECT * FROM property WHERE owner_id = :owner ORDER BY updated_at DESC NULLS LAST, created_at DESC',
+                $rsm
+            )
+            ->setParameter('owner', $owner->getId())
             ->getResult()
         ;
     }
@@ -36,13 +58,16 @@ class PropertyRepository extends ServiceEntityRepository
      */
     public function findByOwnerAndStatus(User $owner, string $status): array
     {
-        return $this->createQueryBuilder('p')
-            ->where('p.owner = :owner')
-            ->andWhere('p.status = :status')
-            ->setParameter('owner', $owner)
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addRootEntityFromClassMetadata(Property::class, 'p');
+
+        return $this->getEntityManager()
+            ->createNativeQuery(
+                'SELECT * FROM property WHERE owner_id = :owner AND status = :status ORDER BY updated_at DESC NULLS LAST, created_at DESC',
+                $rsm
+            )
+            ->setParameter('owner', $owner->getId())
             ->setParameter('status', $status)
-            ->orderBy('p.createdAt', 'DESC')
-            ->getQuery()
             ->getResult()
         ;
     }
