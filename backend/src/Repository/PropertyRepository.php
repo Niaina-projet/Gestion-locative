@@ -28,7 +28,7 @@ class PropertyRepository extends ServiceEntityRepository
 
         return $this->getEntityManager()
             ->createNativeQuery(
-                'SELECT * FROM property ORDER BY updated_at DESC NULLS LAST, created_at DESC',
+                'SELECT * FROM property ORDER BY COALESCE(updated_at, created_at) DESC',
                 $rsm
             )
             ->getResult()
@@ -45,7 +45,7 @@ class PropertyRepository extends ServiceEntityRepository
 
         return $this->getEntityManager()
             ->createNativeQuery(
-                'SELECT * FROM property WHERE owner_id = :owner ORDER BY updated_at DESC NULLS LAST, created_at DESC',
+                'SELECT * FROM property WHERE owner_id = :owner ORDER BY COALESCE(updated_at, created_at) DESC',
                 $rsm
             )
             ->setParameter('owner', $owner->getId())
@@ -63,7 +63,7 @@ class PropertyRepository extends ServiceEntityRepository
 
         return $this->getEntityManager()
             ->createNativeQuery(
-                'SELECT * FROM property WHERE owner_id = :owner AND status = :status ORDER BY updated_at DESC NULLS LAST, created_at DESC',
+                'SELECT * FROM property WHERE owner_id = :owner AND status = :status ORDER BY COALESCE(updated_at, created_at) DESC',
                 $rsm
             )
             ->setParameter('owner', $owner->getId())
@@ -83,5 +83,84 @@ class PropertyRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult()
         ;
+    }
+
+    /**
+     * @return array{data: Property[], total: int}
+     */
+    public function findWithFilters(
+        ?User $owner,
+        ?string $type,
+        ?string $status,
+        ?string $city,
+        ?string $search,
+        int $page,
+        int $limit,
+    ): array {
+        ['conditions' => $conditions, 'params' => $params] = $this->buildFilterConditions(
+            $owner, $type, $status, $city, $search
+        );
+
+        $whereClause = implode(' AND ', $conditions);
+        $offset = ($page - 1) * $limit;
+
+        $rsm = new ResultSetMappingBuilder($this->getEntityManager());
+        $rsm->addRootEntityFromClassMetadata(Property::class, 'p');
+
+        $countRsm = new \Doctrine\ORM\Query\ResultSetMapping();
+        $countRsm->addScalarResult('total', 'total');
+
+        $countQuery = $this->getEntityManager()
+            ->createNativeQuery("SELECT COUNT(*) as total FROM property WHERE {$whereClause}", $countRsm);
+
+        $dataQuery = $this->getEntityManager()
+            ->createNativeQuery(
+                "SELECT * FROM property WHERE {$whereClause} ORDER BY COALESCE(updated_at, created_at) DESC LIMIT :limit OFFSET :offset",
+                $rsm
+            );
+
+        foreach ($params as $key => $value) {
+            $countQuery->setParameter($key, $value);
+            $dataQuery->setParameter($key, $value);
+        }
+
+        $dataQuery->setParameter('limit', $limit);
+        $dataQuery->setParameter('offset', $offset);
+
+        return [
+            'data' => $dataQuery->getResult(),
+            'total' => (int) $countQuery->getSingleScalarResult(),
+        ];
+    }
+
+    /**
+     * @return array{conditions: string[], params: array<string, mixed>}
+     */
+    private function buildFilterConditions(
+        ?User $owner,
+        ?string $type,
+        ?string $status,
+        ?string $city,
+        ?string $search,
+    ): array {
+        $filters = [
+            'owner_id = :owner' => ['owner', $owner?->getId()],
+            'type = :type' => ['type', $type],
+            'status = :status' => ['status', $status],
+            'city LIKE :city' => ['city', $city ? '%'.$city.'%' : null],
+            '(title LIKE :search OR address LIKE :search)' => ['search', $search ? '%'.$search.'%' : null],
+        ];
+
+        $conditions = ['1=1'];
+        $params = [];
+
+        foreach ($filters as $condition => [$paramName, $value]) {
+            if (null !== $value) {
+                $conditions[] = $condition;
+                $params[$paramName] = $value;
+            }
+        }
+
+        return ['conditions' => $conditions, 'params' => $params];
     }
 }

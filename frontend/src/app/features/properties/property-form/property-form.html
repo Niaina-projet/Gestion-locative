@@ -141,10 +141,41 @@
           <mat-card-title>Photos</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <app-file-upload
-            [maxFiles]="5"
-            (filesSelected)="onFilesSelected($event)"
-          />
+          @if (existingPhotos().length > 0) {
+            <div class="existing-photos">
+              <p class="photos-label">Photos actuelles</p>
+              <div class="preview-grid">
+                @for (photo of existingPhotos(); track photo; let i = $index) {
+                  <div class="preview-item">
+                    <img
+                      [src]="propertyService.getPhotoUrl(photo)"
+                      alt="Photo du bien"
+                    />
+                    <button
+                      mat-icon-button
+                      class="remove-btn"
+                      type="button"
+                      (click)="removeExistingPhoto(i)"
+                    >
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @if (existingPhotos().length < 11) {
+            <app-file-upload
+              [maxFiles]="11 - existingPhotos().length"
+              (filesSelected)="onFilesSelected($event)"
+            />
+          } @else {
+            <p class="max-photos-msg">
+              <mat-icon>info</mat-icon>
+              Maximum 10 photos atteint
+            </p>
+          }
         </mat-card-content>
       </mat-card>
 

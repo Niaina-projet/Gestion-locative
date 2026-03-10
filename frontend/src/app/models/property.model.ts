@@ -59,3 +59,20 @@ export const PROPERTY_STATUSES: { value: PropertyStatus; label: string }[] = [
   { value: 'occupied', label: 'Occupé' },
   { value: 'maintenance', label: 'Maintenance' },
 ];
+
+export interface PropertyFilters {
+  type?: string;
+  status?: string;
+  city?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedProperties {
+  data: Property[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}

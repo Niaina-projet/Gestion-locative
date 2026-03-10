@@ -32,8 +32,64 @@
 
         @if (property()!.photos.length > 0) {
           <div class="photos-grid">
-            @for (photo of property()!.photos; track photo) {
-              <img [src]="photo" [alt]="property()!.title" />
+            @for (photo of property()!.photos; track $index; let i = $index) {
+              <img
+                [src]="propertyService.getPhotoUrl(photo)"
+                [alt]="property()!.title"
+                class="clickable"
+                (click)="openZoom(i)"
+                (keyup.enter)="openZoom(i)"
+                tabindex="0"
+              />
+            }
+          </div>
+        }
+
+        @if (zoomedPhoto) {
+          <div
+            class="zoom-overlay"
+            (click)="closeZoom()"
+            (keyup.enter)="closeZoom()"
+            tabindex="0"
+          >
+            <img
+              [src]="zoomedPhoto"
+              alt="Photo agrandie"
+              (click)="$event.stopPropagation()"
+              (keyup.enter)="$event.stopPropagation()"
+              tabindex="0"
+            />
+
+            <button mat-icon-button class="close-zoom" (click)="closeZoom()">
+              <mat-icon>close</mat-icon>
+            </button>
+
+            @if (property()!.photos.length > 1) {
+              <button
+                mat-icon-button
+                class="nav-prev"
+                (click)="$event.stopPropagation(); prevPhoto()"
+              >
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+
+              <button
+                mat-icon-button
+                class="nav-next"
+                (click)="$event.stopPropagation(); nextPhoto()"
+              >
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+
+              <div
+                class="photo-counter"
+                (click)="$event.stopPropagation()"
+                (keyup.enter)="$event.stopPropagation()"
+                tabindex="0"
+              >
+                {{ (zoomedPhotoIndex() ?? 0) + 1 }} /
+                {{ property()!.photos.length }}
+              </div>
             }
           </div>
         }
@@ -97,7 +153,9 @@
               <mat-icon>calendar_today</mat-icon>
               <div>
                 <span class="info-label">Ajouté le</span>
-                <span class="info-value">{{ property()!.createdAt }}</span>
+                <span class="info-value">{{
+                  property()!.createdAt | date: "dd MMMM yyyy"
+                }}</span>
               </div>
             </div>
           </div>

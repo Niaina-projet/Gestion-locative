@@ -8,26 +8,40 @@ use App\Entity\Property;
 use App\Entity\User;
 use App\Repository\PropertyRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class PropertyService
 {
     public function __construct(
         private PropertyRepository $propertyRepository,
         private EntityManagerInterface $em,
-        private string $uploadsDir = '%kernel.project_dir%/public/uploads/properties',
+        private string $uploadsDir,
     ) {
     }
 
     /**
-     * @return Property[]
+     * @return array{data: Property[], total: int}
      */
-    public function findAllForUser(User $user): array
-    {
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
-            return $this->propertyRepository->findAllOrderedByDate();
-        }
+    public function findWithFilters(
+        User $user,
+        ?string $type,
+        ?string $status,
+        ?string $city,
+        ?string $search,
+        int $page,
+        int $limit,
+    ): array {
+        $owner = in_array('ROLE_ADMIN', $user->getRoles()) ? null : $user;
 
-        return $this->propertyRepository->findByOwner($user);
+        return $this->propertyRepository->findWithFilters(
+            $owner,
+            $type,
+            $status,
+            $city,
+            $search,
+            $page,
+            $limit,
+        );
     }
 
     public function createProperty(CreatePropertyDTO $dto, User $owner): Property
@@ -140,18 +154,51 @@ class PropertyService
         ];
     }
 
-    public function addPhoto(Property $property, \Symfony\Component\HttpFoundation\File\UploadedFile $file): Property
+    public function addPhoto(Property $property, UploadedFile $file): array
     {
-        $uploadsDir = $this->uploadsDir;
+        $allowedMimeTypes = ['image/jpeg', 'image/png'];
+        if (! in_array($file->getMimeType(), $allowedMimeTypes)) {
+            return ['error' => 'Format invalide. Formats acceptés : jpg, png'];
+        }
+
+        if ($file->getSize() > 2 * 1024 * 1024) {
+            return ['error' => 'Fichier trop volumineux. Maximum 2MB'];
+        }
+
+        $currentPhotos = $property->getPhotos() ?? [];
+        if (count($currentPhotos) >= 10) {
+            return ['error' => 'Maximum 10 photos par bien'];
+        }
+
         $newFilename = uniqid().'.'.$file->guessExtension();
-        $file->move($uploadsDir, $newFilename);
+        $file->move($this->uploadsDir, $newFilename);
 
-        $photos = $property->getPhotos() ?? [];
-        $photos[] = '/uploads/properties/'.$newFilename;
-        $property->setPhotos($photos);
-
+        $currentPhotos[] = '/uploads/properties/'.$newFilename;
+        $property->setPhotos($currentPhotos);
         $this->em->flush();
 
-        return $property;
+        return ['property' => $property];
+    }
+
+    public function removePhoto(Property $property, int $photoIndex): array
+    {
+        $photos = $property->getPhotos() ?? [];
+
+        if (! isset($photos[$photoIndex])) {
+            return ['error' => 'Photo introuvable'];
+        }
+
+        $filename = basename($photos[$photoIndex]);
+        $filepath = $this->uploadsDir.'/'.$filename;
+
+        if (file_exists($filepath)) {
+            unlink($filepath);
+        }
+
+        array_splice($photos, $photoIndex, 1);
+        $property->setPhotos($photos);
+        $this->em->flush();
+
+        return ['property' => $property];
     }
 }

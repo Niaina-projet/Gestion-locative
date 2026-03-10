@@ -56,10 +56,6 @@ class PropertyVoter extends Voter
 
     private function canDelete(Property $property, User $currentUser): bool
     {
-        if (in_array('ROLE_ADMIN', $currentUser->getRoles())) {
-            return true;
-        }
-
-        return $property->getOwner()->getId() === $currentUser->getId();
+        return in_array('ROLE_ADMIN', $currentUser->getRoles());
     }
 }

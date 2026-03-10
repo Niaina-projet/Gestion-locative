@@ -13,6 +13,40 @@
     }
   }
 
+  .filters-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .filters-form {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      .filter-search {
+        flex: 2;
+        min-width: 200px;
+      }
+
+      .filter-select {
+        flex: 1;
+        min-width: 140px;
+      }
+
+      .filter-city {
+        flex: 1;
+        min-width: 140px;
+      }
+
+      button {
+        margin-bottom: 16px;
+      }
+    }
+  }
+
   .loading-container {
     display: flex;
     justify-content: center;
