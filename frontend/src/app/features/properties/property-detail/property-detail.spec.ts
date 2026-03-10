@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { PropertyDetail } from './property-detail';
 
 describe('PropertyDetail', () => {

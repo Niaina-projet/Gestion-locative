@@ -45,13 +45,14 @@ export class PropertyForm implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private propertyService = inject(PropertyService);
+  propertyService = inject(PropertyService);
   private snackBar = inject(MatSnackBar);
 
   isLoading = signal(false);
   isEditMode = signal(false);
   propertyId = signal<string | null>(null);
   pendingPhotos = signal<UploadedFile[]>([]);
+  existingPhotos = signal<string[]>([]);
 
   propertyTypes = PROPERTY_TYPES;
   propertyStatuses = PROPERTY_STATUSES;
@@ -94,6 +95,7 @@ export class PropertyForm implements OnInit {
           status: property.status,
           description: property.description,
         });
+        this.existingPhotos.set(property.photos ?? []);
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false),
@@ -102,6 +104,18 @@ export class PropertyForm implements OnInit {
 
   onFilesSelected(files: UploadedFile[]): void {
     this.pendingPhotos.set(files);
+  }
+
+  removeExistingPhoto(index: number): void {
+    const id = this.propertyId();
+    if (!id) return;
+
+    this.propertyService.removePhoto(id, index).subscribe({
+      next: (property) => {
+        this.existingPhotos.set(property.photos ?? []);
+        this.snackBar.open('Photo supprimée', 'Fermer', { duration: 2000 });
+      },
+    });
   }
 
   onSubmit(): void {

@@ -7,6 +7,50 @@
     </button>
   </div>
 
+  <div class="filters-container">
+    <form [formGroup]="filterForm" class="filters-form">
+      <mat-form-field appearance="outline" class="filter-search">
+        <mat-label>Rechercher</mat-label>
+        <input
+          matInput
+          formControlName="search"
+          placeholder="Titre ou adresse..."
+        />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-select">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="type">
+          <mat-option value="">Tous</mat-option>
+          @for (type of propertyTypes; track type.value) {
+            <mat-option [value]="type.value">{{ type.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-select">
+        <mat-label>Statut</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="">Tous</mat-option>
+          @for (status of propertyStatuses; track status.value) {
+            <mat-option [value]="status.value">{{ status.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-city">
+        <mat-label>Ville</mat-label>
+        <input matInput formControlName="city" placeholder="Ex: Antananarivo" />
+      </mat-form-field>
+
+      <button mat-stroked-button type="button" (click)="resetFilters()">
+        <mat-icon>clear</mat-icon>
+        Réinitialiser
+      </button>
+    </form>
+  </div>
+
   @if (isLoading()) {
     <div class="loading-container">
       <mat-spinner diameter="48" />
@@ -14,7 +58,7 @@
   } @else if (properties().length === 0) {
     <div class="empty-state">
       <mat-icon>home</mat-icon>
-      <p>Aucun bien immobilier enregistré</p>
+      <p>Aucun bien trouvé</p>
       <button mat-raised-button color="primary" (click)="navigateToCreate()">
         Ajouter votre premier bien
       </button>
@@ -79,20 +123,31 @@
             >
               <mat-icon>edit</mat-icon>
             </button>
-            <button
-              mat-icon-button
-              color="warn"
-              (click)="deleteProperty(property)"
-              matTooltip="Supprimer"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
+            @if (authService.isAdmin()) {
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="deleteProperty(property)"
+                matTooltip="Supprimer"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            }
           </td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
       </table>
+
+      <mat-paginator
+        [length]="totalProperties()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[5, 10, 20]"
+        [pageIndex]="currentPage() - 1"
+        (page)="onPageChange($event)"
+        showFirstLastButtons
+      />
     </div>
   }
 </div>

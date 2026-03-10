@@ -1,4 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,17 +19,20 @@ import { Property } from '../../../models/property.model';
     MatProgressSpinnerModule,
     MatDividerModule,
     StatusBadge,
+    DatePipe,
   ],
   templateUrl: './property-detail.html',
   styleUrl: './property-detail.scss',
 })
 export class PropertyDetail implements OnInit {
-  private propertyService = inject(PropertyService);
+  propertyService = inject(PropertyService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
   property = signal<Property | null>(null);
   isLoading = signal(true);
+
+  zoomedPhotoIndex = signal<number | null>(null);
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -70,5 +74,33 @@ export class PropertyDetail implements OnInit {
       commerce: 'Commerce',
     };
     return labels[type] ?? type;
+  }
+
+  get zoomedPhoto(): string | null {
+    const index = this.zoomedPhotoIndex();
+    if (index === null) return null;
+    return this.propertyService.getPhotoUrl(this.property()!.photos[index]);
+  }
+
+  openZoom(index: number): void {
+    this.zoomedPhotoIndex.set(index);
+  }
+
+  closeZoom(): void {
+    this.zoomedPhotoIndex.set(null);
+  }
+
+  prevPhoto(): void {
+    const index = this.zoomedPhotoIndex();
+    if (index === null) return;
+    const total = this.property()!.photos.length;
+    this.zoomedPhotoIndex.set((index - 1 + total) % total);
+  }
+
+  nextPhoto(): void {
+    const index = this.zoomedPhotoIndex();
+    if (index === null) return;
+    const total = this.property()!.photos.length;
+    this.zoomedPhotoIndex.set((index + 1) % total);
   }
 }
