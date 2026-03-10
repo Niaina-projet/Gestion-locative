@@ -25,6 +25,34 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
+        path: 'properties',
+        loadComponent: () =>
+          import('./features/properties/property-list/property-list').then(
+            (m) => m.PropertyList,
+          ),
+      },
+      {
+        path: 'properties/create',
+        loadComponent: () =>
+          import('./features/properties/property-form/property-form').then(
+            (m) => m.PropertyForm,
+          ),
+      },
+      {
+        path: 'properties/:id',
+        loadComponent: () =>
+          import('./features/properties/property-detail/property-detail').then(
+            (m) => m.PropertyDetail,
+          ),
+      },
+      {
+        path: 'properties/:id/edit',
+        loadComponent: () =>
+          import('./features/properties/property-form/property-form').then(
+            (m) => m.PropertyForm,
+          ),
+      },
+      {
         path: 'users',
         loadComponent: () =>
           import('./features/auth/user-management/user-management').then(
